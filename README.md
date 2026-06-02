@@ -14,10 +14,10 @@
 
 ## 👨‍💻 Sobre mim
 
-Olá! Sou **Marcus Vinicius**, desenvolvedor de software focado em construir produtos que entregam valor real. Atualmente desenvolvendo aplicações com integração de IA, Lua e TypeScript.
+Olá! Sou **Marcus Vinicius**, desenvolvedor de software focado em construir produtos que entregam valor real. 
 
 - 🎓 Estudante de Engenharia de Software no **iCEV** · Teresina, Piauí
-- 🌱 Atualmente aprofundando em **FastAPI**, **React** e **arquitetura de sistemas**
+- 🌱 Atualmente aprofundando em **integração de IA**, **Lua** e **TypeScript**. 
 - 💡 Interesse em transformar dados em decisões inteligentes
 - 📫 Conecte-se comigo no [LinkedIn](https://www.linkedin.com/in/marcus-vinicius-moura-lima-38341b352/)
 
