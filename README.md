@@ -61,17 +61,6 @@ Olá! Sou **Marcus Vinicius**, desenvolvedor de software focado em construir pro
 
 ---
 
-## 📌 Projetos em Destaque
-
-<div align="center">
-
-[![FrotaIQ](https://github-readme-stats.vercel.app/api/pin/?username=marcusviniciusend&repo=frota-iq&theme=tokyonight&border_color=7C3AED&title_color=7C3AED&icon_color=7C3AED)](https://github.com/marcusviniciusend/frota-iq)
-[![PetZone](https://github-readme-stats.vercel.app/api/pin/?username=marcusviniciusend&repo=PetZone&theme=tokyonight&border_color=7C3AED&title_color=7C3AED&icon_color=7C3AED)](https://github.com/marcusviniciusend/PetZone)
-
-</div>
-
----
-
 ## 📊 GitHub Stats
 
 <div align="center">
