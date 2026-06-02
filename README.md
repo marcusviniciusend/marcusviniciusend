@@ -1,13 +1,5 @@
 <div align="center">
 
-![header](https://capsule-render.vercel.app/api?type=waving&color=0:0f0c29,50:302b63,100:24243e&height=200&section=header&text=Marcus%20Vinicius&fontSize=52&fontColor=ffffff&fontAlignY=38&desc=Software%20Developer%20%7C%20Building%20things%20that%20matter&descSize=16&descAlignY=60&descColor=a0aec0&animation=fadeIn)
-
-</div>
-
----
-
-<div align="center">
-
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=16&duration=3000&pause=1000&color=7C3AED&center=true&vCenter=true&width=500&lines=Desenvolvedor+Full+Stack;Apaixonado+por+resolver+problemas+reais;FastAPI+%7C+React+%7C+PostgreSQL;Sempre+aprendendo+algo+novo)](https://git.io/typing-svg)
 
 </div>
@@ -16,10 +8,9 @@
 
 ## 👨‍💻 Sobre mim
 
-Olá! Sou **Marcus Vinicius**, desenvolvedor de software focado em construir produtos que entregam valor real. Atualmente desenvolvendo o **FrotaIQ** — uma plataforma de análise de frotas com IA voltada para empresas de engenharia civil.
+Olá! Sou **Marcus Vinicius**, desenvolvedor de software focado em construir produtos que entregam valor real. Atualmente desenvolvendo aplicações com integração de IA, Lua e TypeScript.
 
-- 🚀 Trabalhando em [`FrotaIQ`](https://github.com/marcusviniciusend/frota-iq) — gestão de frotas com IA
-- 🎓 Estudante de TI na **iCEV** · Teresina, Piauí
+- 🎓 Estudante de Engenharia de Software no **iCEV** · Teresina, Piauí
 - 🌱 Atualmente aprofundando em **FastAPI**, **React** e **arquitetura de sistemas**
 - 💡 Interesse em transformar dados em decisões inteligentes
 - 📫 Conecte-se comigo no [LinkedIn](https://www.linkedin.com/in/marcus-vinicius-moura-lima-38341b352/)
