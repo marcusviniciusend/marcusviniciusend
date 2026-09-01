@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=16&duration=3000&pause=1000&color=7C3AED&center=true&vCenter=true&width=500&lines=Desenvolvedor+na+Softsafe;Ci%C3%AAncia+da+Computa%C3%A7%C3%A3o+%C2%B7+iCEV;Software+para+sa%C3%BAde+%2B+IA+aplicada;FastAPI+%7C+React+%7C+PostgreSQL)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=16&duration=3000&pause=1000&color=7C3AED&center=true&vCenter=true&width=500&lines=Desenvolvedor+na+Medsafe;Engenharia+de+Software+%C2%B7+iCEV;Software+para+sa%C3%BAde+%2B+IA+aplicada;FastAPI+%7C+React+%7C+PostgreSQL)](https://git.io/typing-svg)
 
 [![Profile Views](https://komarev.com/ghpvc/?username=marcusviniciusend&label=Profile%20views&color=7C3AED&style=for-the-badge)](https://github.com/marcusviniciusend)
 
@@ -16,7 +16,7 @@
 
 ## 👋 Olá!
 
-Sou **Marcus Vinicius**, desenvolvedor de software na **Softsafe** e estudante de **Ciência da Computação** no **iCEV** (5º semestre) — Teresina, Piauí.
+Sou **Marcus Vinicius**, desenvolvedor de software na **Medsafe** e estudante de **Engenharia de Software** no **iCEV** (5º semestre) — Teresina, Piauí.
 
 Gosto de construir produtos que resolvem problemas reais, especialmente quando envolvem dados, IA aplicada e sistemas que precisam ser confiáveis de verdade.
 
