@@ -3,14 +3,17 @@
 
 A CENA
 ------
-As duas esferas sao os "O" que ladeiam a palavra, paradas nas pontas. O nome
-cresce do centro para fora, em pares simetricos:
+As duas esferas atravessam a faixa em sentidos opostos e se cruzam no meio. Ao se
+afastarem, vao deixando as letras para tras: elas sao sempre os "O" das pontas, e
+o nome cresce em pares simetricos no vao que elas abrem.
 
     O          O   ->   O  R G  O   ->   O A R G O O   ->   O M A R G O D O
 
-Isso acontece duas vezes. Na segunda, nome e subtitulo congelam acesos, as
-esferas se apagam e sobra so o nome -- que dai em diante recebe uma varredura de
-luz percorrendo as letras da esquerda para a direita, em loop.
+Trajeto e tempos sao os do margod-banner.svg original -- cada par acende no
+instante exato em que as esferas terminam de passar por ele. Sao duas travessias;
+na segunda o nome e o subtitulo congelam acesos e as esferas saem de cena sem
+voltar. Dai em diante uma varredura de luz percorre as letras da esquerda para a
+direita, em loop.
 
 OS ATIVOS
 ---------
@@ -73,14 +76,16 @@ for g in letter_groups:
 letters.sort(key=lambda p: p[0])            # M A R G O D, da esquerda para a direita
 
 # esferas: camadas base sempre visiveis + 7 quadros que se alternam sozinhos
-spheres = []
+spheres, sphere_paths = [], []
 for track in sphere_tracks:
+    sphere_paths.append(
+        re.search(r'<animateTransform[^>]*values="([^"]+)"', track).group(1))
     kids = top_groups(track, track.index(">") + 1)
     spheres.append("".join(re.sub(r">\s+<", "><", k).strip()
                            .replace('begin="-1.55s"', 'begin="0s"') for k in kids))
 
 # ----------------------------------------------------------------------- conteudo
-SUB = "SOFTWARE ENGINEER @ SOFTSAFE (MEDSAFE)  ·  CS STUDENT @ iCEV"
+SUB = "SOFTWARE ENGINEER @ MEDSAFE  ·  CS STUDENT @ iCEV"
 TECH = ["AI ENGINEERING", "LLM ORCHESTRATION", "RAG", "VECTOR DATABASES",
         "PROMPT ENGINEERING", "ANTHROPIC CLAUDE", "OPENAI", "DEEPSEEK", "OLLAMA",
         "SPEECH-TO-TEXT", "TEXT-TO-SPEECH",
@@ -111,26 +116,24 @@ MX = 40                      # margem horizontal do conteudo
 GRID = 85                    # celula da grade de fundo (680 = 8 colunas exatas)
 RX = 14                      # raio do canto do cartao
 
-# As esferas ficam paradas nas pontas, como os "O" que ladeiam a palavra.
-# O wordmark ocupa x=200..480; cada esfera fica a 10px de folga dele.
-SPHERE_X = (126, 546)        # origem do translate; o centro do sprite e origem+4
-SPHERE_Y = 100
+# As esferas atravessam a faixa em sentidos opostos, se CRUZAM no meio e, ao se
+# afastarem, vao deixando as letras para tras -- elas sao sempre os "O" das
+# pontas, e o nome cresce no vao que elas abrem. Trajeto e tempos sao os do
+# margod-banner.svg original: cada par acende no instante em que as esferas
+# terminam de passar por ele.
 
 # ------------------------------------------------------------------------- tempos
 LOOP = 5.0                           # duracao de uma escrita
 CYCLES = 2
 TOTAL = LOOP * CYCLES                # depois disso o nome congela aceso
 PAIRS = ((2, 3), (1, 4), (0, 5))     # R,G -> A,O -> M,D : do centro para fora
-PAIR_T = (0.90, 1.40, 1.90)          # quando cada par acende
-GROW = 0.30                          # tempo de subida
-SUB_T = PAIR_T[-1] + 0.40            # subtitulo logo apos o ultimo par
-OUT_A, OUT_B = 4.20, 4.55            # apagada entre um ciclo e o outro
-
-BALL_DUR = TOTAL + 1.0               # as esferas somem depois da segunda escrita
-BALL_OUT_A, BALL_OUT_B = TOTAL, TOTAL + 0.8
+PAIR_T = (2.80, 3.06, 3.33)          # tempos do banner original: as esferas ja
+GROW = 0.25                          # passaram por esse par quando ele acende
+SUB_T = 3.60                         # subtitulo logo apos o ultimo par
+OUT_A, OUT_B = 4.50, 4.80            # apagada entre um ciclo e o outro
 
 SHINE = 7.0                          # periodo da varredura de brilho
-SHINE_BEGIN = BALL_OUT_B             # so comeca quando sobra apenas o nome
+SHINE_BEGIN = TOTAL                  # so comeca quando a cena assenta
 LEAD, STEP, PEAK, BACK = 0.10, 0.16, 0.35, 0.85
 GLOW = {INK: "#ffffff", BG: T1}      # tom base -> pico do brilho
 
@@ -152,15 +155,6 @@ def reveal(t):
             % (TOTAL, keytimes(ts, TOTAL)))
 
 
-def ball_opacity():
-    """As esferas entram, acompanham as duas escritas e se apagam no fim."""
-    ts = [0.0, 0.15, 0.55, OUT_A, OUT_B, LOOP + 0.15, LOOP + 0.55,
-          BALL_OUT_A, BALL_OUT_B, BALL_DUR]
-    return ('<animate attributeName="opacity" dur="%gs" repeatCount="1" fill="freeze" '
-            'calcMode="linear" keyTimes="%s" values="0;0;1;1;0;0;1;1;0;0"/>'
-            % (BALL_DUR, keytimes(ts, BALL_DUR)))
-
-
 def shine(i, base, peak):
     """Onda de luz percorrendo as letras da esquerda para a direita, em loop.
 
@@ -180,10 +174,14 @@ def txt(x, y, s, size, fill, ls=0, op=1.0, anchor="start"):
 
 
 # ---------------------------------------------------------- cabecalho: O + nome + O
+# repeatCount=CYCLES + fill=freeze: fazem exatamente duas travessias e param fora
+# de quadro. Nao somem por opacidade -- simplesmente saem de cena e nao voltam.
 sphere_svg = "".join(
-    '<g transform="translate(%d %d)" opacity="1">%s%s</g>'
-    % (x, SPHERE_Y, body, ball_opacity())
-    for x, body in zip(SPHERE_X, spheres))
+    '<g transform="translate(%s)">%s'
+    '<animateTransform attributeName="transform" type="translate" dur="%gs" '
+    'repeatCount="%d" fill="freeze" calcMode="linear" values="%s"/></g>'
+    % (v.split(";")[0], body, LOOP, CYCLES, v)
+    for v, body in zip(sphere_paths, spheres))
 
 when = [None] * 6                    # em que instante cada letra acende
 for (a, b), t in zip(PAIRS, PAIR_T):
@@ -252,14 +250,14 @@ defs = ('<clipPath id="card"><rect x="0" y="0" width="%d" height="%d" rx="%d"/><
            MX, RULE1, W - 2 * MX, RULE2 - RULE1,
            MX, RULE1, W - 2 * MX, RULE2 - RULE1))
 
-svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" shape-rendering="crispEdges" role="img" aria-label="MARGOD — Marcus Vinicius, Software Engineer at Softsafe (Medsafe) and CS student at iCEV. Stack: {stack}. Latest work: {worklist}.">
+svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" shape-rendering="crispEdges" role="img" aria-label="MARGOD — Marcus Vinicius, Software Engineer at Medsafe and CS student at iCEV. Stack: {stack}. Latest work: {worklist}.">
   <title>MARGOD — Marcus Vinicius</title>
   <defs>{defs}</defs>
   <g clip-path="url(#card)">
     <rect width="{W}" height="{H}" fill="{BG}"/>
     {grid}
-    {spheres}
     {letters}
+    {spheres}
     {subtitle}
     <rect x="{MX}" y="{RULE1}" width="{cw}" height="1" fill="{T1}" opacity="0.8"/>
     <g mask="url(#edges)" shape-rendering="auto">{marquee}</g>
@@ -281,5 +279,5 @@ for t in (0.0,) + PAIR_T:
     print("   %.2fs   O%sO" % (
         t, "".join(c if (when[i] is not None and when[i] <= t) else " "
                    for i, c in enumerate("MARGOD"))))
-print("subtitulo em %.2fs · esferas somem em %.1f-%.1fs · brilho a partir de %.1fs"
-      % (SUB_T, BALL_OUT_A, BALL_OUT_B, SHINE_BEGIN))
+print("subtitulo em %.2fs · esferas fazem %d travessias e saem · brilho a partir de %.1fs"
+      % (SUB_T, CYCLES, SHINE_BEGIN))
