@@ -1,22 +1,35 @@
 # -*- coding: utf-8 -*-
 """Gera margod-readme.svg, a peca unica do README deste perfil.
 
-As esferas atravessam a faixa acendendo as letras de MARGOD conforme passam por
-cima delas; o subtitulo entra logo depois e nome + subtitulo congelam acesos,
-enquanto as esferas seguem orbitando e as faixas de stack rolando.
+A CENA
+------
+As duas esferas sao os "O" que ladeiam a palavra, paradas nas pontas. O nome
+cresce do centro para fora, em pares simetricos:
 
+    O          O   ->   O  R G  O   ->   O A R G O O   ->   O M A R G O D O
+
+Isso acontece duas vezes. Na segunda, nome e subtitulo congelam acesos, as
+esferas se apagam e sobra so o nome -- que dai em diante recebe uma varredura de
+luz percorrendo as letras da esquerda para a direita, em loop.
+
+OS ATIVOS
+---------
 Os pixels do wordmark e das esferas sao EXTRAIDOS de margod-banner.svg, que por
 isso precisa continuar no repositorio -- este script nao redesenha o pixel art,
 so o recompoe com um novo tempo e um novo layout.
 
-Para editar a stack ou a lista de trabalhos, mexa em TECH / WORK abaixo e rode:
+COMO EDITAR
+-----------
+Mexa em TECH / WORK abaixo e rode:
 
     python build_readme_svg.py
 
-Saida: SVG estatico, sem webfont, sem script e sem nenhuma referencia de rede --
-o proxy Camo do GitHub bloqueia recurso externo. Toda animacao e SMIL, e o SVG
-foi escrito para funcionar tambem SEM ela: os elementos nascem com opacity="1",
-entao se o Camo descartar o SMIL o nome aparece mesmo assim.
+SAIDA
+-----
+SVG estatico: sem webfont, sem script, sem nenhuma referencia de rede -- o proxy
+Camo do GitHub bloqueia recurso externo. Toda animacao e SMIL, e o arquivo foi
+escrito para funcionar tambem SEM ela: os elementos nascem com opacity="1", entao
+se o Camo descartar o SMIL o nome aparece do mesmo jeito.
 """
 import re
 
@@ -26,10 +39,8 @@ OUT = "margod-readme.svg"
 BG, INK, T4, T3, T2, T1 = "#0a0a0a", "#f1efe8", "#b4b2a9", "#888780", "#5f5e5a", "#3a3a3a"
 MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, &#39;Courier New&#39;, monospace"
 W = 680
-LOOP = 5.0          # duracao do trajeto das esferas (igual ao banner atual)
-FRAMES = LOOP * 7   # ciclo de quadros do sprite (igual ao banner atual)
 
-# ---------------------------------------------------------------- extrair ativos
+# ------------------------------------------------------------------ extrair ativos
 src = open(SRC, encoding="utf-8").read()
 
 
@@ -52,28 +63,23 @@ letter_groups = [t for t in tops if "<animateTransform" not in t]
 sphere_tracks = [t for t in tops if "<animateTransform" in t]
 assert len(letter_groups) == 6 and len(sphere_tracks) == 2
 
-# cada letra: camada de contorno (#0a0a0a) + glifo (#f1efe8), coordenadas originais
+# cada letra: camada de contorno (#0a0a0a) sob o glifo (#f1efe8), coordenadas originais
 letters = []
 for g in letter_groups:
     layers = [(fill, re.sub(r">\s+<", "><", inner).strip())
               for fill, inner in re.findall(r'<g fill="(#[0-9a-f]{6})"[^>]*>(.*?)</g>', g, re.S)]
     xs = [int(x) for x in re.findall(r'x="(-?\d+)"', g)]
     letters.append((min(xs) + (max(xs) + 8 - min(xs)) / 2.0, layers))
-letters.sort(key=lambda p: p[0])
+letters.sort(key=lambda p: p[0])            # M A R G O D, da esquerda para a direita
 
-# esferas: camadas base + 7 quadros, cada quadro com seu animate discreto
+# esferas: camadas base sempre visiveis + 7 quadros que se alternam sozinhos
 spheres = []
 for track in sphere_tracks:
-    at = re.search(r'<animateTransform[^>]*values="([^"]+)"', track)
     kids = top_groups(track, track.index(">") + 1)
-    parts = []
-    for k in kids:
-        k = re.sub(r'dur="35s"', 'dur="%gs"' % FRAMES, k)
-        k = re.sub(r'begin="-1\.55s"', 'begin="0s"', k)
-        parts.append(re.sub(r">\s+<", "><", k).strip())
-    spheres.append((at.group(1), "".join(parts)))
+    spheres.append("".join(re.sub(r">\s+<", "><", k).strip()
+                           .replace('begin="-1.55s"', 'begin="0s"') for k in kids))
 
-# ------------------------------------------------------------------- conteudo
+# ----------------------------------------------------------------------- conteudo
 SUB = "SOFTWARE ENGINEER @ SOFTSAFE (MEDSAFE)  ·  CS STUDENT @ iCEV"
 TECH = ["AI ENGINEERING", "LLM ORCHESTRATION", "RAG", "VECTOR DATABASES",
         "PROMPT ENGINEERING", "ANTHROPIC CLAUDE", "OPENAI", "DEEPSEEK", "OLLAMA",
@@ -94,8 +100,7 @@ WORK = [
 ]
 FOOTER = "(C) 2026 MARCUS VINICIUS  ·  TERESINA, PIAUI  ·  BRAZIL"
 
-# --------------------------------------------------------------------- layout
-HEADER_END = 212
+# ------------------------------------------------------------------------- layout
 RULE1, RULE2 = 236, 344
 ROWS_Y = (262, 292, 322)
 HEAD_Y = 382
@@ -103,100 +108,99 @@ ITEM0, PITCH, DESC_DY = 412, 40, 15
 FOOT_Y = 622
 H = 652
 MX = 40                      # margem horizontal do conteudo
+GRID = 85                    # celula da grade de fundo (680 = 8 colunas exatas)
+RX = 14                      # raio do canto do cartao
+
+# As esferas ficam paradas nas pontas, como os "O" que ladeiam a palavra.
+# O wordmark ocupa x=200..480; cada esfera fica a 10px de folga dele.
+SPHERE_X = (126, 546)        # origem do translate; o centro do sprite e origem+4
+SPHERE_Y = 100
+
+# ------------------------------------------------------------------------- tempos
+LOOP = 5.0                           # duracao de uma escrita
+CYCLES = 2
+TOTAL = LOOP * CYCLES                # depois disso o nome congela aceso
+PAIRS = ((2, 3), (1, 4), (0, 5))     # R,G -> A,O -> M,D : do centro para fora
+PAIR_T = (0.90, 1.40, 1.90)          # quando cada par acende
+GROW = 0.30                          # tempo de subida
+SUB_T = PAIR_T[-1] + 0.40            # subtitulo logo apos o ultimo par
+OUT_A, OUT_B = 4.20, 4.55            # apagada entre um ciclo e o outro
+
+BALL_DUR = TOTAL + 1.0               # as esferas somem depois da segunda escrita
+BALL_OUT_A, BALL_OUT_B = TOTAL, TOTAL + 0.8
+
+SHINE = 7.0                          # periodo da varredura de brilho
+SHINE_BEGIN = BALL_OUT_B             # so comeca quando sobra apenas o nome
+LEAD, STEP, PEAK, BACK = 0.10, 0.16, 0.35, 0.85
+GLOW = {INK: "#ffffff", BG: T1}      # tom base -> pico do brilho
 
 
-def txt(x, y, s, size, fill, ls=0, op=1.0, anchor="start", weight=None):
-    w = ' font-weight="%s"' % weight if weight else ""
-    return ('<text x="%s" y="%s" font-family="%s" font-size="%s" fill="%s" '
-            'letter-spacing="%s" opacity="%s" text-anchor="%s"%s '
-            'xml:space="preserve">%s</text>') % (
-        x, y, MONO, size, fill, ls, op, anchor, w, s)
+def keytimes(ts, span):
+    return ";".join("%.4f" % (t / span) for t in ts)
 
 
-# ------------------------------------------------------- esferas + nome escrito
-# instante em que o centro de cada esfera cruza cada letra
-def cross_time(values, cx):
-    a, b = [float(v.split()[0]) for v in values.split(";")]
-    # centro do sprite = origem + 4 (bbox local -56..64)
-    t = (cx - 4 - a) / (b - a) * LOOP
-    return t
-
-
-order = []
-for idx, (cx, _) in enumerate(letters):
-    best = min((abs(cross_time(v, cx)), cross_time(v, cx)) for v, _ in spheres)
-    order.append(best[1])
-REVEAL_END = max(order)
-SUB_T = REVEAL_END + 0.3
-
-sphere_svg = "".join(
-    '<g transform="translate(%s)">%s'
-    '<animateTransform attributeName="transform" type="translate" dur="%gs" '
-    'repeatCount="indefinite" calcMode="linear" values="%s"/></g>'
-    % (v.split(";")[0], body, LOOP, v)
-    for v, body in spheres)
-
-
-CYCLES = 2                    # quantas vezes as esferas escrevem o nome
-TOTAL = LOOP * CYCLES
-# Na virada do ciclo as duas esferas ficam fora de quadro ao mesmo tempo (~4,74s
-# a ~5,26s). Se o nome apagasse ali, o cabecalho ficaria completamente vazio.
-# Apagar so depois disso mantem sempre alguma coisa em cena.
-OUT_A, OUT_B = 5.30, 5.60     # apagada entre um ciclo e o outro
-
-
-def reveal(t, dur=0.35):
-    """Acende em t, apaga no fim do 1o ciclo, reacende no 2o e CONGELA acesa.
+def reveal(t):
+    """Acende em t, apaga entre os ciclos, reacende no 2o e CONGELA acesa.
 
     Um unico <animate> cobre os dois ciclos, entao o valor congelado e sempre 1 --
-    nao depende de ordem de prioridade entre animacoes concorrentes.
+    nao depende de prioridade entre animacoes concorrentes.
     """
-    k = [0.0, t / TOTAL, (t + dur) / TOTAL, OUT_A / TOTAL, OUT_B / TOTAL,
-         (LOOP + t) / TOTAL, (LOOP + t + dur) / TOTAL, 1.0]
-    assert k[2] < k[3] and k[4] < k[5], "ciclos se sobrepoem"
+    ts = [0.0, t, t + GROW, OUT_A, OUT_B, LOOP + t, LOOP + t + GROW, TOTAL]
+    assert ts[2] < ts[3] and ts[4] < ts[5], "os ciclos se sobrepoem"
     return ('<animate attributeName="opacity" dur="%gs" repeatCount="1" fill="freeze" '
             'calcMode="linear" keyTimes="%s" values="0;0;1;1;0;0;1;1"/>'
-            % (TOTAL, ";".join("%.4f" % v for v in k)))
+            % (TOTAL, keytimes(ts, TOTAL)))
 
 
-SHINE = 7.0        # periodo da varredura de brilho
-LEAD = 0.10        # respiro antes da primeira letra (keyTimes tem de ser crescente)
-STEP = 0.16        # atraso de uma letra para a proxima
-PEAK = 0.35        # subida ate o pico
-BACK = 0.85        # volta ao tom base
+def ball_opacity():
+    """As esferas entram, acompanham as duas escritas e se apagam no fim."""
+    ts = [0.0, 0.15, 0.55, OUT_A, OUT_B, LOOP + 0.15, LOOP + 0.55,
+          BALL_OUT_A, BALL_OUT_B, BALL_DUR]
+    return ('<animate attributeName="opacity" dur="%gs" repeatCount="1" fill="freeze" '
+            'calcMode="linear" keyTimes="%s" values="0;0;1;1;0;0;1;1;0;0"/>'
+            % (BALL_DUR, keytimes(ts, BALL_DUR)))
 
 
 def shine(i, base, peak):
     """Onda de luz percorrendo as letras da esquerda para a direita, em loop.
 
-    So comeca depois que o nome assenta (begin=TOTAL). Como anima `fill`, o estado
-    sem SMIL continua sendo o tom base -- o brilho e puro acrescimo.
+    Como anima `fill`, o estado sem SMIL continua sendo o tom base: e acrescimo puro.
     """
     t0 = LEAD + i * STEP
-    k = [0.0, t0 / SHINE, (t0 + PEAK) / SHINE, (t0 + BACK) / SHINE, 1.0]
+    ts = [0.0, t0, t0 + PEAK, t0 + BACK, SHINE]
     return ('<animate attributeName="fill" begin="%gs" dur="%gs" repeatCount="indefinite" '
             'calcMode="linear" keyTimes="%s" values="%s;%s;%s;%s;%s"/>'
-            % (TOTAL, SHINE, ";".join("%.4f" % v for v in k),
-               base, base, peak, base, base))
+            % (SHINE_BEGIN, SHINE, keytimes(ts, SHINE), base, base, peak, base, base))
 
 
-# O glifo ja esta no tom mais claro da paleta, entao o unico "acima" e o branco
-# puro -- um ganho pequeno. Quem faz o brilho ler e o contorno escuro clareando
-# ate #3a3a3a, que vira um halo de 8px em volta de cada letra.
-GLOW = {INK: "#ffffff", BG: "#3a3a3a"}      # tom base -> pico do brilho
+def txt(x, y, s, size, fill, ls=0, op=1.0, anchor="start"):
+    return ('<text x="%s" y="%s" font-family="%s" font-size="%s" fill="%s" '
+            'letter-spacing="%s" opacity="%s" text-anchor="%s" '
+            'xml:space="preserve">%s</text>') % (x, y, MONO, size, fill, ls, op, anchor, s)
+
+
+# ---------------------------------------------------------- cabecalho: O + nome + O
+sphere_svg = "".join(
+    '<g transform="translate(%d %d)" opacity="1">%s%s</g>'
+    % (x, SPHERE_Y, body, ball_opacity())
+    for x, body in zip(SPHERE_X, spheres))
+
+when = [None] * 6                    # em que instante cada letra acende
+for (a, b), t in zip(PAIRS, PAIR_T):
+    when[a] = when[b] = t
 
 letters_svg = "".join(
     '<g opacity="1">%s%s</g>' % (
         "".join('<g fill="%s">%s%s</g>' % (fill, inner, shine(i, fill, GLOW[fill]))
                 for fill, inner in layers),
-        reveal(t))
-    for i, ((cx, layers), t) in enumerate(zip(letters, order)))
+        reveal(when[i]))
+    for i, (cx, layers) in enumerate(letters))
 
 subtitle_svg = '<g opacity="1">%s%s</g>' % (
-    txt(W / 2, 192, SUB, 10, T3, 2.6, 1.0, "middle"), reveal(SUB_T, 0.6))
+    txt(W / 2, 192, SUB, 10, T3, 2.6, 1.0, "middle"), reveal(SUB_T))
 
-# ------------------------------------------------------------- marquee da stack
-CH = 7.55  # largura aproximada de um caractere monoespacado a 12.5px
+# ----------------------------------------------------------------- marquee da stack
+CH = 7.55                            # largura aproximada de um caractere a 12.5px
 
 
 def row(items, y, size, op, speed, reverse, fill):
@@ -222,7 +226,7 @@ marquee = "".join([
     row(rot(16), ROWS_Y[2], 12.5, 0.52, 43, False, T3),
 ])
 
-# ----------------------------------------------------------------- trabalhos
+# --------------------------------------------------------------------- trabalhos
 work_svg = [txt(MX, HEAD_Y, "LATEST WORK &amp; PROJECTS", 11.5, INK, 2.4, 0.95)]
 for i, (year, title, desc) in enumerate(WORK):
     y = ITEM0 + i * PITCH
@@ -232,37 +236,50 @@ for i, (year, title, desc) in enumerate(WORK):
 work_svg.append(txt(MX, FOOT_Y, FOOTER, 8.5, T2, 1.6, 1.0))
 work_svg = "".join(work_svg)
 
-# --------------------------------------------------------------------- montagem
-mask = ('<linearGradient id="fade" gradientUnits="userSpaceOnUse" '
-        'x1="%d" x2="%d" y1="0" y2="0">'
+# ------------------------------------------------------- grade de fundo e moldura
+grid = ('<path d="%s" stroke="%s" stroke-width="1" fill="none" opacity="0.05"/>'
+        % ("".join("M%d 0V%d" % (x, H) for x in range(GRID, W, GRID))
+           + "".join("M0 %dH%d" % (y, W) for y in range(GRID, H, GRID)), INK))
+
+defs = ('<clipPath id="card"><rect x="0" y="0" width="%d" height="%d" rx="%d"/></clipPath>'
+        '<linearGradient id="fade" gradientUnits="userSpaceOnUse" x1="%d" x2="%d" y1="0" y2="0">'
         '<stop offset="0" stop-color="#000"/><stop offset="0.10" stop-color="#fff"/>'
         '<stop offset="0.90" stop-color="#fff"/><stop offset="1" stop-color="#000"/>'
         '</linearGradient>'
         '<mask id="edges" maskUnits="userSpaceOnUse" x="%d" y="%d" width="%d" height="%d">'
         '<rect x="%d" y="%d" width="%d" height="%d" fill="url(#fade)"/></mask>'
-        % (MX, W - MX, MX, RULE1, W - 2 * MX, RULE2 - RULE1,
+        % (W, H, RX, MX, W - MX,
+           MX, RULE1, W - 2 * MX, RULE2 - RULE1,
            MX, RULE1, W - 2 * MX, RULE2 - RULE1))
 
 svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" shape-rendering="crispEdges" role="img" aria-label="MARGOD — Marcus Vinicius, Software Engineer at Softsafe (Medsafe) and CS student at iCEV. Stack: {stack}. Latest work: {worklist}.">
   <title>MARGOD — Marcus Vinicius</title>
-  <rect width="{W}" height="{H}" fill="{BG}"/>
-  <rect x="8.5" y="8.5" width="{fw}" height="{fh}" fill="none" stroke="{T1}" stroke-width="1" opacity="0.55"/>
-  <defs>{mask}</defs>
-  {spheres}
-  {letters}
-  {subtitle}
-  <rect x="{MX}" y="{RULE1}" width="{cw}" height="1" fill="{T1}" opacity="0.8"/>
-  <g mask="url(#edges)" shape-rendering="auto">{marquee}</g>
-  <rect x="{MX}" y="{RULE2}" width="{cw}" height="1" fill="{T1}" opacity="0.8"/>
-  <g shape-rendering="auto">{work}</g>
+  <defs>{defs}</defs>
+  <g clip-path="url(#card)">
+    <rect width="{W}" height="{H}" fill="{BG}"/>
+    {grid}
+    {spheres}
+    {letters}
+    {subtitle}
+    <rect x="{MX}" y="{RULE1}" width="{cw}" height="1" fill="{T1}" opacity="0.8"/>
+    <g mask="url(#edges)" shape-rendering="auto">{marquee}</g>
+    <rect x="{MX}" y="{RULE2}" width="{cw}" height="1" fill="{T1}" opacity="0.8"/>
+    <g shape-rendering="auto">{work}</g>
+  </g>
+  <rect x="0.5" y="0.5" width="{fw}" height="{fh}" rx="{RX}" fill="none" stroke="{T1}" stroke-width="1" opacity="0.55"/>
 </svg>
-""".format(W=W, H=H, BG=BG, T1=T1, MX=MX, cw=W - 2 * MX, fw=W - 17, fh=H - 17,
-           RULE1=RULE1, RULE2=RULE2, mask=mask, spheres=sphere_svg,
+""".format(W=W, H=H, BG=BG, T1=T1, MX=MX, RX=RX, cw=W - 2 * MX, fw=W - 1, fh=H - 1,
+           RULE1=RULE1, RULE2=RULE2, defs=defs, grid=grid, spheres=sphere_svg,
            letters=letters_svg, subtitle=subtitle_svg, marquee=marquee, work=work_svg,
            stack=", ".join(t.title() for t in TECH),
            worklist="; ".join("%s (%s)" % (t.title(), y) for y, t, _ in WORK))
 
 open(OUT, "w", encoding="utf-8", newline="\n").write(svg)
+
 print("%s: %d bytes  %dx%d" % (OUT, len(svg.encode("utf-8")), W, H))
-print("letras acendem em: %s" % ", ".join("%.2fs" % t for t in order))
-print("subtitulo em %.2fs  ·  %d ciclos de escrita, congela aceso em %.0fs, brilho a cada %.0fs" % (SUB_T, CYCLES, TOTAL, SHINE))
+for t in (0.0,) + PAIR_T:
+    print("   %.2fs   O%sO" % (
+        t, "".join(c if (when[i] is not None and when[i] <= t) else " "
+                   for i, c in enumerate("MARGOD"))))
+print("subtitulo em %.2fs · esferas somem em %.1f-%.1fs · brilho a partir de %.1fs"
+      % (SUB_T, BALL_OUT_A, BALL_OUT_B, SHINE_BEGIN))
