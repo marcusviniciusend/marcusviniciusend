@@ -77,8 +77,8 @@ for track in sphere_tracks:
 
 # ------------------------------------------------------------------- conteudo
 SUB = "SOFTWARE ENGINEER @ SOFTSAFE (MEDSAFE)  ·  CS STUDENT @ iCEV"
-TECH = ["AI ENGINEERING", "LLM ORCHESTRATION", "PROMPT ENGINEERING",
-        "ANTHROPIC CLAUDE", "OPENAI", "DEEPSEEK", "OLLAMA",
+TECH = ["AI ENGINEERING", "LLM ORCHESTRATION", "RAG", "VECTOR DATABASES",
+        "PROMPT ENGINEERING", "ANTHROPIC CLAUDE", "OPENAI", "DEEPSEEK", "OLLAMA",
         "SPEECH-TO-TEXT", "TEXT-TO-SPEECH",
         "PYTHON", "FASTAPI", "TYPESCRIPT", "REACT", "NEXT.JS",
         "JAVA", "SPRING", "ANGULAR", "SUPABASE", "POSTGRESQL", "DOCKER", "GIT"]
@@ -157,13 +157,16 @@ subtitle_svg = '<g opacity="1">%s%s</g>' % (
 CH = 7.55  # largura aproximada de um caractere monoespacado a 12.5px
 
 
-def row(items, y, size, op, dur, reverse, fill):
+def row(items, y, size, op, speed, reverse, fill):
+    """speed em px/s; a duracao sai da largura, entao mexer na lista TECH nao
+    altera a velocidade de rolagem."""
     run = "  —  ".join(items) + "  —  "
     width = int(len(run) * CH * size / 12.5)
     copies = "".join(
         '<text x="%d" y="%d" textLength="%d" lengthAdjust="spacing" font-family="%s" '
         'font-size="%s" fill="%s" letter-spacing="0" xml:space="preserve">%s</text>'
         % (MX + i * width, y, width, MONO, size, fill, run) for i in range(3))
+    dur = width / float(speed)
     frm, to = ("%d 0" % -width, "0 0") if reverse else ("0 0", "%d 0" % -width)
     return ('<g opacity="%s">%s<animateTransform attributeName="transform" '
             'type="translate" dur="%gs" repeatCount="indefinite" calcMode="linear" '
@@ -172,9 +175,9 @@ def row(items, y, size, op, dur, reverse, fill):
 
 rot = lambda n: TECH[n:] + TECH[:n]
 marquee = "".join([
-    row(rot(0),  ROWS_Y[0], 12.5, 0.92, 48, False, INK),
-    row(rot(7),  ROWS_Y[1], 12.5, 0.70, 58, True,  T4),
-    row(rot(14), ROWS_Y[2], 12.5, 0.52, 53, False, T3),
+    row(rot(0),  ROWS_Y[0], 12.5, 0.92, 47, False, INK),
+    row(rot(8),  ROWS_Y[1], 12.5, 0.70, 39, True,  T4),
+    row(rot(16), ROWS_Y[2], 12.5, 0.52, 43, False, T3),
 ])
 
 # ----------------------------------------------------------------- trabalhos
