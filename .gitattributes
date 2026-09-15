@@ -1,0 +1,8 @@
+# Os SVG sao gerados por assets/build_readme_svg.py -- fora das estatisticas
+# de linguagem e colapsados nos diffs.
+assets/margod-readme.svg linguist-generated=true
+assets/margod-banner.svg linguist-generated=true
+
+# O gerador e codigo de verdade, nao gerado -- mas tambem nao deve definir a
+# linguagem deste repositorio, que e um perfil e nao um projeto Python.
+assets/build_readme_svg.py linguist-detectable=false

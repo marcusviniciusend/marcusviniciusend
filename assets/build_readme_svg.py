@@ -25,7 +25,7 @@ COMO EDITAR
 -----------
 Mexa em TECH / WORK abaixo e rode:
 
-    python build_readme_svg.py
+    python assets/build_readme_svg.py
 
 SAIDA
 -----
@@ -34,14 +34,23 @@ Camo do GitHub bloqueia recurso externo. Toda animacao e SMIL, e o arquivo foi
 escrito para funcionar tambem SEM ela: os elementos nascem com opacity="1", entao
 se o Camo descartar o SMIL o nome aparece do mesmo jeito.
 """
+import os
 import re
 
-SRC = "margod-banner.svg"
-OUT = "margod-readme.svg"
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.join(HERE, "margod-banner.svg")
+OUT = os.path.join(HERE, "margod-readme.svg")
 
 BG, INK, T4, T3, T2, T1 = "#0a0a0a", "#f1efe8", "#b4b2a9", "#888780", "#5f5e5a", "#3a3a3a"
 MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, &#39;Courier New&#39;, monospace"
-W = 680
+W = 680                      # sistema de coordenadas do desenho
+
+# Tamanho INTRINSECO do arquivo, deliberadamente maior que qualquer coluna de
+# README do GitHub. O <img> no README nao leva atributo width: assim o
+# `max-width: 100%` do CSS do GitHub encolhe a peca ate a largura da coluna, e
+# ela preenche o quadro em vez de sobrar borda dos dois lados. O viewBox nao
+# muda, entao o desenho e o mesmo -- so a escala de exibicao.
+DISPLAY_W = 1200
 
 # ------------------------------------------------------------------ extrair ativos
 src = open(SRC, encoding="utf-8").read()
@@ -250,7 +259,7 @@ defs = ('<clipPath id="card"><rect x="0" y="0" width="%d" height="%d" rx="%d"/><
            MX, RULE1, W - 2 * MX, RULE2 - RULE1,
            MX, RULE1, W - 2 * MX, RULE2 - RULE1))
 
-svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" shape-rendering="crispEdges" role="img" aria-label="MARGOD — Marcus Vinicius, Software Engineer at Medsafe and CS student at iCEV. Stack: {stack}. Latest work: {worklist}.">
+svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{dw}" height="{dh}" shape-rendering="crispEdges" role="img" aria-label="MARGOD — Marcus Vinicius, Software Engineer at Medsafe and CS student at iCEV. Stack: {stack}. Latest work: {worklist}.">
   <title>MARGOD — Marcus Vinicius</title>
   <defs>{defs}</defs>
   <g clip-path="url(#card)">
@@ -267,6 +276,7 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W
   <rect x="0.5" y="0.5" width="{fw}" height="{fh}" rx="{RX}" fill="none" stroke="{T1}" stroke-width="1" opacity="0.55"/>
 </svg>
 """.format(W=W, H=H, BG=BG, T1=T1, MX=MX, RX=RX, cw=W - 2 * MX, fw=W - 1, fh=H - 1,
+           dw=DISPLAY_W, dh=int(round(H * DISPLAY_W / float(W))),
            RULE1=RULE1, RULE2=RULE2, defs=defs, grid=grid, spheres=sphere_svg,
            letters=letters_svg, subtitle=subtitle_svg, marquee=marquee, work=work_svg,
            stack=", ".join(t.title() for t in TECH),
@@ -274,7 +284,8 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W
 
 open(OUT, "w", encoding="utf-8", newline="\n").write(svg)
 
-print("%s: %d bytes  %dx%d" % (OUT, len(svg.encode("utf-8")), W, H))
+print("%s: %d bytes  desenho %dx%d, exibido em %dpx"
+      % (os.path.basename(OUT), len(svg.encode("utf-8")), W, H, DISPLAY_W))
 for t in (0.0,) + PAIR_T:
     print("   %.2fs   O%sO" % (
         t, "".join(c if (when[i] is not None and when[i] <= t) else " "
