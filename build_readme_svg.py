@@ -55,12 +55,10 @@ assert len(letter_groups) == 6 and len(sphere_tracks) == 2
 # cada letra: camada de contorno (#0a0a0a) + glifo (#f1efe8), coordenadas originais
 letters = []
 for g in letter_groups:
-    layers = re.findall(r'<g fill="(#[0-9a-f]{6})"[^>]*>(.*?)</g>', g, re.S)
-    body = "".join(
-        '<g fill="%s">%s</g>' % (fill, re.sub(r">\s+<", "><", inner).strip())
-        for fill, inner in layers)
+    layers = [(fill, re.sub(r">\s+<", "><", inner).strip())
+              for fill, inner in re.findall(r'<g fill="(#[0-9a-f]{6})"[^>]*>(.*?)</g>', g, re.S)]
     xs = [int(x) for x in re.findall(r'x="(-?\d+)"', g)]
-    letters.append((min(xs) + (max(xs) + 8 - min(xs)) / 2.0, body))
+    letters.append((min(xs) + (max(xs) + 8 - min(xs)) / 2.0, layers))
 letters.sort(key=lambda p: p[0])
 
 # esferas: camadas base + 7 quadros, cada quadro com seu animate discreto
@@ -139,16 +137,60 @@ sphere_svg = "".join(
     for v, body in spheres)
 
 
-def reveal(t, dur=0.35):
-    """values/keyTimes que acendem em t e congelam acesos (SMIL opcional)."""
-    a, b = t / LOOP, min((t + dur) / LOOP, 1.0)
-    return ('<animate attributeName="opacity" dur="%gs" repeatCount="1" fill="freeze" '
-            'calcMode="linear" keyTimes="0;%.4f;%.4f;1" values="0;0;1;1"/>') % (LOOP, a, b)
+CYCLES = 2                    # quantas vezes as esferas escrevem o nome
+TOTAL = LOOP * CYCLES
+# Na virada do ciclo as duas esferas ficam fora de quadro ao mesmo tempo (~4,74s
+# a ~5,26s). Se o nome apagasse ali, o cabecalho ficaria completamente vazio.
+# Apagar so depois disso mantem sempre alguma coisa em cena.
+OUT_A, OUT_B = 5.30, 5.60     # apagada entre um ciclo e o outro
 
+
+def reveal(t, dur=0.35):
+    """Acende em t, apaga no fim do 1o ciclo, reacende no 2o e CONGELA acesa.
+
+    Um unico <animate> cobre os dois ciclos, entao o valor congelado e sempre 1 --
+    nao depende de ordem de prioridade entre animacoes concorrentes.
+    """
+    k = [0.0, t / TOTAL, (t + dur) / TOTAL, OUT_A / TOTAL, OUT_B / TOTAL,
+         (LOOP + t) / TOTAL, (LOOP + t + dur) / TOTAL, 1.0]
+    assert k[2] < k[3] and k[4] < k[5], "ciclos se sobrepoem"
+    return ('<animate attributeName="opacity" dur="%gs" repeatCount="1" fill="freeze" '
+            'calcMode="linear" keyTimes="%s" values="0;0;1;1;0;0;1;1"/>'
+            % (TOTAL, ";".join("%.4f" % v for v in k)))
+
+
+SHINE = 7.0        # periodo da varredura de brilho
+LEAD = 0.10        # respiro antes da primeira letra (keyTimes tem de ser crescente)
+STEP = 0.16        # atraso de uma letra para a proxima
+PEAK = 0.35        # subida ate o pico
+BACK = 0.85        # volta ao tom base
+
+
+def shine(i, base, peak):
+    """Onda de luz percorrendo as letras da esquerda para a direita, em loop.
+
+    So comeca depois que o nome assenta (begin=TOTAL). Como anima `fill`, o estado
+    sem SMIL continua sendo o tom base -- o brilho e puro acrescimo.
+    """
+    t0 = LEAD + i * STEP
+    k = [0.0, t0 / SHINE, (t0 + PEAK) / SHINE, (t0 + BACK) / SHINE, 1.0]
+    return ('<animate attributeName="fill" begin="%gs" dur="%gs" repeatCount="indefinite" '
+            'calcMode="linear" keyTimes="%s" values="%s;%s;%s;%s;%s"/>'
+            % (TOTAL, SHINE, ";".join("%.4f" % v for v in k),
+               base, base, peak, base, base))
+
+
+# O glifo ja esta no tom mais claro da paleta, entao o unico "acima" e o branco
+# puro -- um ganho pequeno. Quem faz o brilho ler e o contorno escuro clareando
+# ate #3a3a3a, que vira um halo de 8px em volta de cada letra.
+GLOW = {INK: "#ffffff", BG: "#3a3a3a"}      # tom base -> pico do brilho
 
 letters_svg = "".join(
-    '<g opacity="1">%s%s</g>' % (body, reveal(t))
-    for (cx, body), t in zip(letters, order))
+    '<g opacity="1">%s%s</g>' % (
+        "".join('<g fill="%s">%s%s</g>' % (fill, inner, shine(i, fill, GLOW[fill]))
+                for fill, inner in layers),
+        reveal(t))
+    for i, ((cx, layers), t) in enumerate(zip(letters, order)))
 
 subtitle_svg = '<g opacity="1">%s%s</g>' % (
     txt(W / 2, 192, SUB, 10, T3, 2.6, 1.0, "middle"), reveal(SUB_T, 0.6))
@@ -223,4 +265,4 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W
 open(OUT, "w", encoding="utf-8", newline="\n").write(svg)
 print("%s: %d bytes  %dx%d" % (OUT, len(svg.encode("utf-8")), W, H))
 print("letras acendem em: %s" % ", ".join("%.2fs" % t for t in order))
-print("subtitulo em %.2fs  ·  nome congela aceso apos o primeiro ciclo" % SUB_T)
+print("subtitulo em %.2fs  ·  %d ciclos de escrita, congela aceso em %.0fs, brilho a cada %.0fs" % (SUB_T, CYCLES, TOTAL, SHINE))
