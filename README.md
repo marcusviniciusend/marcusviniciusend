@@ -15,15 +15,15 @@
 
 ---
 
-### 🛠️ Tools, langs & frameworks
+### Tools, langs & frameworks
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=ts,react,nextjs,java,spring,py,fastapi,angular,supabase,postgres,docker,git&perline=6&theme=dark" />
+  <img src="margod-tech.svg" width="680" />
 </p>
 
 ---
 
-### 📌 Latest work & projects
+### Latest work & projects
 
 - **[2026] Shogun** — personal JARVIS-style voice assistant built from scratch, desktop and mobile app
 - **[2026] Medsafe / Paciente Integrado** — AI transcription & structured-field pipeline for clinical software
